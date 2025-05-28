@@ -6,16 +6,31 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class VehicleController extends Controller
 {
 
     // app/Http/Controllers/Api/VehicleController.php
 
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = Vehicle::where('user_id', Auth::id())->get();
-        return response()->json($vehicles);
+        try {
+            $vehicles = $request->user()->vehicles;
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data kendaraan berhasil ditemukan.',
+                'data' => $vehicles,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error retrieving vehicles: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal mengambil data kendaraan.',
+                'data' => [],
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -26,6 +41,21 @@ class VehicleController extends Controller
             'brand' => 'required|string',
             'color' => 'required|string',
             'is_stolen' => 'boolean',
+        ], [
+            'license_plate.required' => 'Plat nomor wajib diisi.',
+            'license_plate.string' => 'Plat nomor harus berupa teks.',
+            'license_plate.max' => 'Plat nomor maksimal 20 karakter.',
+
+            'type.required' => 'Tipe kendaraan wajib diisi.',
+            'type.string' => 'Tipe kendaraan harus berupa teks.',
+
+            'brand.required' => 'Merk kendaraan wajib diisi.',
+            'brand.string' => 'Merk kendaraan harus berupa teks.',
+
+            'color.required' => 'Warna kendaraan wajib diisi.',
+            'color.string' => 'Warna kendaraan harus berupa teks.',
+
+            'is_stolen.boolean' => 'Status pencurian harus berupa nilai ya/tidak.',
         ]);
 
         $data['user_id'] = Auth::id();

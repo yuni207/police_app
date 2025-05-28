@@ -20,7 +20,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::group(['prefix' => 'panel-control', 'middleware' => ['auth:sanctum']], function () {
     Route::get('/profile', [AuthController::class, 'profile']);
-    Route::get('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     //vehicles routes
     Route::get('/vehicles', [VehicleController::class, 'index']);
