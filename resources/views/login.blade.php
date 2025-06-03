@@ -19,7 +19,7 @@
                         <div class="card mb-0">
                             <div class="card-body">
                                 <a href="./index.html" class="text-nowrap logo-img text-center d-block py-3 w-100">
-                                    <img src="{{ asset('assets/images/logos/logopolice.jpg') }}" alt="Police App Logo" style="height: 40px;">
+                                    <img src="{{ asset('assets/images/logos/logopolice.jpg') }}" alt="Police App Logo"  style="height: 40px;">
                                 </a>
                                 <p class="text-center mb-1">Police App</p>
                                 <p class="text-center">Connecting Citizens with Law Enforcement</p>
