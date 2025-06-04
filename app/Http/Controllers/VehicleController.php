@@ -88,7 +88,7 @@ class VehicleController extends Controller
         $vehicle->update($data);
 
         return response()->json([
-            'message' => 'Vehicle berhasil diubah',
+            'message' => 'Berhasil memperbarui kendaraan',
             'data' => $vehicle
         ]);
     }
