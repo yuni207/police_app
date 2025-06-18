@@ -82,7 +82,7 @@ if (window.location.pathname.includes('/panel-control/officers')) {
     }
 
     function displayOfficers(data) {
-        const tbody = document.getElementById("officerTableBody");
+        const tbody = document.getElementById("officersTableBody");
 
         if ($.fn.DataTable.isDataTable('#officersTable')) {
             $('#officersTable').DataTable().clear().destroy();

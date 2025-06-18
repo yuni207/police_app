@@ -22,7 +22,7 @@
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="officerTableBody">
+                    <tbody id="officersTableBody">
 
                     </tbody>
                 </table>
