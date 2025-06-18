@@ -84,8 +84,8 @@ if (window.location.pathname.includes('/panel-control/officers')) {
     function displayOfficers(data) {
         const tbody = document.getElementById("officerTableBody");
 
-        if ($.fn.DataTable.isDataTable('#officerTable')) {
-            $('#officerTable').DataTable().clear().destroy();
+        if ($.fn.DataTable.isDataTable('#officersTable')) {
+            $('#officersTable').DataTable().clear().destroy();
         }
 
         tbody.innerHTML = data.length ? '' :
@@ -110,7 +110,7 @@ if (window.location.pathname.includes('/panel-control/officers')) {
             tbody.appendChild(tr);
         });
 
-        $('#officerTable').DataTable({
+        $('#officersTable').DataTable({
             responsive: true, autoWidth: false,
             language: {
                 search: "Cari:",

@@ -11,7 +11,7 @@
             </div>
 
             <div class="card-body">
-                <table class="table table-striped table-hover" id="officerTable">
+                <table class="table table-striped table-hover" id="officersTable">
                     <thead>
                         <tr>
                             <th>No</th>
