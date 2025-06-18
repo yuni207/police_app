@@ -187,47 +187,42 @@ if (window.location.pathname.includes('/panel-control/officers')) {
     }
 
     async function confirmDeleteOfficer(id) {
-        console.log("Delete officer with ID:", id);
-        const result = await Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
+        const res = await Swal.fire({
             icon: 'warning',
+            title: 'Yakin ingin menghapus?',
+            text: 'Data ini akan dihapus permanen!',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal'
         });
-
-        if (result.isConfirmed) {
-            deleteOfficer(id);
-        }
+        if (res.isConfirmed) deleteOfficer(id);
     }
 
     async function deleteOfficer(id) {
         try {
             const token = decodeURIComponent(getCookie('token'));
-            const response = await axios.delete(`/api/panel-control/officers/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+            const res = await axios.delete(`/api/panel-control/officers/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
                 withCredentials: true
             });
 
             Swal.fire({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
                 icon: 'success',
-                title: response.data.message || 'Data deleted successfully.'
+                title: res.data.message || 'Berhasil dihapus',
+                toast: true, position: 'top-end',
+                showConfirmButton: false, timer: 2000
             });
 
-            document.getElementById('officersTableBody').innerHTML = '';
-            setTimeout(() => location.reload(), 1000);
+            fetchOfficers();
+
         } catch (error) {
-            console.error("Gagal menghapus data:", error);
-            const errorMessage = error.response?.data?.message || "Terjadi kesalahan saat menghapus data.";
-            showErrorToast(errorMessage);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menghapus',
+                text: error.response?.data?.message || 'Terjadi kesalahan.',
+                toast: true, position: 'top-end',
+                showConfirmButton: false, timer: 2000
+            });
         }
     }
 
