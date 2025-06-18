@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
+use App\Models\Officer;
 
 class DashboardController extends Controller
 {
@@ -17,6 +18,13 @@ class DashboardController extends Controller
         $vehicles = Vehicle::all();
 
         return view('vehicle.vehicles', compact('vehicles'));
+    }
+
+    public function officers()
+    {
+        $officers = Officer::all();
+
+        return view('officer.officers', compact('officers'));
     }
 
 }

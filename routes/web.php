@@ -25,5 +25,6 @@ Route::group(['prefix' => 'panel-control'], function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/vehicles', [DashboardController::class, 'vehicles']);
     Route::post('/vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
-    
+    Route::get('/officers', [DashboardController::class, 'officers']);
+    Route::post('/officers', [VehicleController::class, 'store'])->name('officers.store');
 });
