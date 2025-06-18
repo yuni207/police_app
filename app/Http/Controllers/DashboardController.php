@@ -24,7 +24,7 @@ class DashboardController extends Controller
     {
         $officers = Officer::all();
 
-        return view('officer.officers', compact('officers'));
+        return view('officer.officer', compact('officers'));
     }
 
 }
