@@ -1,251 +1,228 @@
 if (window.location.pathname.includes('/panel-control/officers')) {
-    document.addEventListener("DOMContentLoaded", function () {
-        const officerForm = document.getElementById('officerForm');
-        const editOfficerForm = document.getElementById('editOfficerForm');
-
-        if (officerForm) officerForm.addEventListener('submit', addOfficer);
-        if (editOfficerForm) editOfficerForm.addEventListener('submit', updateOfficer);
-
-        fetchOfficers();
-    });
-
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-
-    async function fetchOfficers() {
+    document.addEventListener("DOMContentLoaded", async function () {
         try {
             const token = decodeURIComponent(getCookie('token'));
+            if (!token) {
+                console.warn("Token tidak ditemukan.");
+                window.location.href = '/';
+                return;
+            }
+
             const response = await axios.get('/api/panel-control/officers', {
-                headers: { Authorization: `Bearer ${token}` },
+                headers: { 'Authorization': `Bearer ${token}` },
                 withCredentials: true
             });
+
             displayOfficers(response.data.data);
         } catch (error) {
-            console.error("Gagal memuat data officer:", error);
+            showErrorToast(error.response?.data?.message || "Gagal memuat data.");
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                window.location.href = '/';
+            }
         }
+
+        document.getElementById("createOfficerForm").addEventListener("submit", addOfficer);
+        document.getElementById("editOfficerForm").addEventListener("submit", updateOfficer);
+
+        $('#createOfficerModal').on('hidden.bs.modal', () => {
+            document.getElementById("createOfficerForm").reset();
+            clearCreateFormErrors();
+        });
+
+        $('#editOfficerModal').on('hidden.bs.modal', () => {
+            document.getElementById("editOfficerForm").reset();
+            clearEditFormErrors();
+        });
+    });
+
+    function showErrorToast(message) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: message, timer: 3000, showConfirmButton: false });
     }
 
-    async function addOfficer(event) {
-        event.preventDefault();
-        const form = event.target;
+    function clearCreateFormErrors() {
+        document.getElementById("createNameError").textContent = "";
+        document.getElementById("createBadgeNumberError").textContent = "";
+        document.getElementById("createRankError").textContent = "";
+        document.getElementById("createAreaError").textContent = "";
+    }
 
-        const data = {
-            name: form.querySelector('#name').value.trim(),
-            badge_number: form.querySelector('#badge_number').value.trim(),
-            rank: form.querySelector('#rank').value.trim(),
-            assigned_area: form.querySelector('#assigned_area').value.trim(),
-        };
+    function clearEditFormErrors() {
+        document.getElementById("editNameError").textContent = "";
+        document.getElementById("editBadgeNumberError").textContent = "";
+        document.getElementById("editRankError").textContent = "";
+        document.getElementById("editAreaError").textContent = "";
+    }
 
-        clearAddErrors();
+    async function addOfficer(e) {
+        e.preventDefault();
+        clearCreateFormErrors();
+
+        const token = decodeURIComponent(getCookie('token'));
+        const name = document.getElementById("addName").value.trim();
+        const badge_number = document.getElementById("addBadgeNumber").value.trim();
+        const rank = document.getElementById("addRank").value.trim();
+        const assigned_area = document.getElementById("addArea").value.trim();
 
         try {
-            const token = decodeURIComponent(getCookie('token'));
-            const response = await axios.post('/api/panel-control/officers', data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+            const response = await axios.post('/api/panel-control/officers', {
+                name, badge_number, rank, assigned_area
+            }, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 withCredentials: true
             });
 
-            Swal.fire({
-                icon: 'success',
-                title: response.data.message || 'Berhasil menambahkan',
-                toast: true, position: 'top-end',
-                showConfirmButton: false, timer: 2000
-            });
-
-            bootstrap.Modal.getInstance(document.getElementById('addOfficerModal')).hide();
-            form.reset();
-            fetchOfficers();
-
+            $('#createOfficerModal').modal('hide');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.data.message, timer: 3000, showConfirmButton: false });
+            setTimeout(() => location.reload(), 1000);
         } catch (error) {
             if (error.response?.status === 422) {
-                const errs = error.response.data.errors;
-                for (let f in errs) {
-                    const el = form.querySelector(`#${f}Error`);
-                    if (el) el.textContent = errs[f][0];
-                }
+                const errors = error.response.data.errors;
+                if (errors.name) document.getElementById("createNameError").textContent = errors.name[0];
+                if (errors.badge_number) document.getElementById("createBadgeNumberError").textContent = errors.badge_number[0];
+                if (errors.rank) document.getElementById("createRankError").textContent = errors.rank[0];
+                if (errors.assigned_area) document.getElementById("createAreaError").textContent = errors.assigned_area[0];
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Menyimpan',
-                    text: error.response?.data?.message || 'Terjadi kesalahan.',
-                    toast: true, position: 'top-end',
-                    showConfirmButton: false, timer: 2000
-                });
+                showErrorToast(error.response?.data?.message || "Gagal menambahkan officer.");
             }
         }
     }
 
     function displayOfficers(data) {
         const tbody = document.getElementById("officersTableBody");
+        tbody.innerHTML = "";
 
-        if ($.fn.DataTable.isDataTable('#officersTable')) {
-            $('#officersTable').DataTable().clear().destroy();
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center">Data not available</td></tr>`;
+            return;
         }
-
-        tbody.innerHTML = data.length ? '' :
-            `<tr><td colspan="6" class="text-center">Data Officer Kosong</td></tr>`;
 
         window.officerData = data;
 
-        data.forEach((item, idx) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${idx + 1}</td>
+        data.forEach((item, i) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <th scope="row">${i + 1}</th>
                 <td>${item.name}</td>
                 <td>${item.badge_number}</td>
                 <td>${item.rank}</td>
                 <td>${item.assigned_area}</td>
                 <td>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editOfficerModal" onclick="showEditOfficerModal(${item.id}, ${idx})">
-                        <i class="fas fa-edit"></i> Edit</button>
-                    <button class="btn btn-danger" onclick="confirmDeleteOfficer(${item.id})">
-                        <i class="fas fa-trash"></i> Hapus</button>
-                </td>`;
-            tbody.appendChild(tr);
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editOfficerModal" onclick="showEditOfficerModal(${item.id}, ${i})">Edit</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteOfficer(${item.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
         });
 
-        $('#officersTable').DataTable({
-            responsive: true, autoWidth: false,
-            language: {
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ entri",
-                paginate: {
-                    first: "Pertama", last: "Terakhir",
-                    next: "Selanjutnya", previous: "Sebelumnya"
-                },
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                infoEmpty: "Tidak ada data tersedia"
-            }
-        });
+        if (!$.fn.DataTable.isDataTable('#officersTable')) {
+            $('#officersTable').DataTable({
+                responsive: true,
+                autoWidth: false,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Semua"]],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    infoEmpty: "Tidak ada data yang tersedia",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
+                    }
+                }
+            });
+        }
     }
 
-    function showEditOfficerModal(id, index) {
-        clearEditErrors();
-        const o = window.officerData[index];
+    window.showEditOfficerModal = function(id, index) {
+        clearEditFormErrors();
+        const item = window.officerData[index];
         document.getElementById("editOfficerId").value = id;
-        document.getElementById("editName").value = o.name;
-        document.getElementById("editBadgeNumber").value = o.badge_number;
-        document.getElementById("editRank").value = o.rank;
-        document.getElementById("editAssignedArea").value = o.assigned_area;
+        document.getElementById("editName").value = item.name;
+        document.getElementById("editBadgeNumber").value = item.badge_number;
+        document.getElementById("editRank").value = item.rank;
+        document.getElementById("editArea").value = item.assigned_area;
     }
 
     async function updateOfficer(e) {
         e.preventDefault();
-        clearEditErrors();
+        clearEditFormErrors();
 
         const id = document.getElementById("editOfficerId").value;
-        const data = {
-            name: document.getElementById("editName").value.trim(),
-            badge_number: document.getElementById("editBadgeNumber").value.trim(),
-            rank: document.getElementById("editRank").value.trim(),
-            assigned_area: document.getElementById("editAssignedArea").value.trim(),
-        };
+        const name = document.getElementById("editName").value.trim();
+        const badge_number = document.getElementById("editBadgeNumber").value.trim();
+        const rank = document.getElementById("editRank").value.trim();
+        const assigned_area = document.getElementById("editArea").value.trim();
+
+        const token = decodeURIComponent(getCookie('token'));
 
         try {
-            const token = decodeURIComponent(getCookie('token'));
-            const res = await axios.put(`/api/panel-control/officers/${id}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+            const response = await axios.put(`/api/panel-control/officers/${id}`, {
+                name, badge_number, rank, assigned_area
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` },
                 withCredentials: true
             });
 
-            Swal.fire({
-                icon: 'success',
-                title: res.data.message || 'Berhasil update',
-                toast: true, position: 'top-end',
-                showConfirmButton: false, timer: 2000
-            });
-
-            bootstrap.Modal.getInstance(document.getElementById('editOfficerModal')).hide();
-            fetchOfficers();
-
+            $('#editOfficerModal').modal('hide');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: response.data.message, timer: 3000, showConfirmButton: false });
+            setTimeout(() => location.reload(), 1000);
         } catch (error) {
             if (error.response?.status === 422) {
-                const errs = error.response.data.errors;
-                for (let f in errs) {
-                    const el = document.getElementById(`edit${f.charAt(0).toUpperCase() + f.slice(1)}Error`);
-                    if (el) el.textContent = errs[f][0];
-                }
+                const errors = error.response.data.errors;
+                if (errors.name) document.getElementById("editNameError").textContent = errors.name[0];
+                if (errors.badge_number) document.getElementById("editBadgeNumberError").textContent = errors.badge_number[0];
+                if (errors.rank) document.getElementById("editRankError").textContent = errors.rank[0];
+                if (errors.assigned_area) document.getElementById("editAreaError").textContent = errors.assigned_area[0];
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Update',
-                    text: error.response?.data?.message || 'Terjadi kesalahan.',
-                    toast: true, position: 'top-end',
-                    showConfirmButton: false, timer: 2000
-                });
+                showErrorToast(error.response?.data?.message || "Gagal mengupdate officer.");
             }
         }
     }
+}
 
-    async function confirmDeleteOfficer(id) {
+window.confirmDeleteOfficer = async function(id) {
     const result = await Swal.fire({
         icon: 'warning',
         title: 'Yakin ingin menghapus?',
         text: "Data ini akan dihapus permanen!",
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, hapus!",
-        cancelButtonText: "Batal"
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
     });
-
+    
 
     if (result.isConfirmed) {
-        deleteVehicle(id);
+        deleteOfficer(id);
     }
 }
 
-    async function deleteOfficer(id) {
-        try {
-            const token = decodeURIComponent(getCookie('token'));
-            const res = await axios.delete(`/api/panel-control/officers/${id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true
-            });
-
-            Swal.fire({
-                icon: 'success',
-                title: res.data.message || 'Berhasil dihapus',
-                toast: true, position: 'top-end',
-                showConfirmButton: false, timer: 2000
-            });
-
-            fetchOfficers();
-
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal Menghapus',
-                text: error.response?.data?.message || 'Terjadi kesalahan.',
-                toast: true, position: 'top-end',
-                showConfirmButton: false, timer: 2000
-            });
-        }
-    }
-
-    function clearAddErrors() {
-        ['name', 'badge_number', 'rank', 'assigned_area'].forEach(f => {
-            const el = document.getElementById(`${f}Error`);
-            if (el) el.textContent = "";
+async function deleteOfficer(id) {
+    try {
+        const token = decodeURIComponent(getCookie('token'));
+        const response = await axios.delete(`/api/panel-control/officers/${id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            withCredentials: true
         });
-    }
 
-    function clearEditErrors() {
-        ['Name', 'BadgeNumber', 'Rank', 'AssignedArea'].forEach(f => {
-            const el = document.getElementById(`edit${f}Error`);
-            if (el) el.textContent = "";
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            icon: 'success',
+            title: response.data.message || 'Data deleted successfully.'
         });
-    }
 
-    window.showEditOfficerModal = showEditOfficerModal;
-    window.confirmDeleteOfficer = confirmDeleteOfficer;
+        document.getElementById('officersTableBody').innerHTML = '';
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Terjadi kesalahan saat menghapus data.";
+        showErrorToast(errorMessage);
+    }
 }
