@@ -187,16 +187,22 @@ if (window.location.pathname.includes('/panel-control/officers')) {
     }
 
     async function confirmDeleteOfficer(id) {
-        const res = await Swal.fire({
-            icon: 'warning',
-            title: 'Yakin ingin menghapus?',
-            text: 'Data ini akan dihapus permanen!',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, hapus',
-            cancelButtonText: 'Batal'
-        });
-        if (res.isConfirmed) deleteOfficer(id);
+    const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Yakin ingin menghapus?',
+        text: "Data ini akan dihapus permanen!",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Ya, hapus!",
+        cancelButtonText: "Batal"
+    });
+
+
+    if (result.isConfirmed) {
+        deleteVehicle(id);
     }
+}
 
     async function deleteOfficer(id) {
         try {
