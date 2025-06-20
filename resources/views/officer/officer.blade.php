@@ -41,22 +41,22 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label for="addName" class="form-label">Nama</label>
-                    <input type="text" class="form-control" id="addName" name="name" required>
+                    <input type="text" class="form-control" id="addName" name="name">
                     <small id="createNameError" class="text-danger"></small>
                 </div>
                 <div class="mb-3">
                     <label for="addBadgeNumber" class="form-label">Nomor Lencana</label>
-                    <input type="text" class="form-control" id="addBadgeNumber" name="badge_number" required>
+                    <input type="text" class="form-control" id="addBadgeNumber" name="badge_number">
                     <small id="createBadgeNumberError" class="text-danger"></small>
                 </div>
                 <div class="mb-3">
                     <label for="addRank" class="form-label">Pangkat</label>
-                    <input type="text" class="form-control" id="addRank" name="rank" required>
+                    <input type="text" class="form-control" id="addRank" name="rank">
                     <small id="createRankError" class="text-danger"></small>
                 </div>
                 <div class="mb-3">
                     <label for="addArea" class="form-label">Wilayah Tugas</label>
-                    <input type="text" class="form-control" id="addArea" name="assigned_area" required>
+                    <input type="text" class="form-control" id="addArea" name="assigned_area">
                     <small id="createAreaError" class="text-danger"></small>
                 </div>
             </div>

@@ -25,14 +25,31 @@ class OfficerController extends Controller
     // Simpan officer baru
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:100',
             'badge_number' => 'required|string|max:20|unique:officers,badge_number',
             'rank' => 'required|string|max:50',
             'assigned_area' => 'required|string|max:100',
+        ], [
+            'name.required' => 'Nama wajib diisi.',
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama maksimal 100 karakter.',
+
+            'badge_number.required' => 'Nomor badge wajib diisi.',
+            'badge_number.string' => 'Nomor badge harus berupa teks.',
+            'badge_number.max' => 'Nomor badge maksimal 20 karakter.',
+            'badge_number.unique' => 'Nomor badge sudah digunakan.',
+
+            'rank.required' => 'Pangkat wajib diisi.',
+            'rank.string' => 'Pangkat harus berupa teks.',
+            'rank.max' => 'Pangkat maksimal 50 karakter.',
+
+            'assigned_area.required' => 'Wilayah tugas wajib diisi.',
+            'assigned_area.string' => 'Wilayah tugas harus berupa teks.',
+            'assigned_area.max' => 'Wilayah tugas maksimal 100 karakter.',
         ]);
 
-        $officer = Officer::create($validatedData);
+        $officer = Officer::create($data);
 
         return response()->json([
             'status' => 'success',

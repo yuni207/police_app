@@ -36,7 +36,14 @@ if (window.location.pathname.includes('/panel-control/officers')) {
     });
 
     function showErrorToast(message) {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: message, timer: 3000, showConfirmButton: false });
+        Swal.fire({ 
+            toast: true, 
+            position: 'top-end', 
+            icon: 'error', 
+            title: message, 
+            timer: 3000, 
+            showConfirmButton: false 
+        });
     }
 
     function clearCreateFormErrors() {
@@ -98,16 +105,16 @@ if (window.location.pathname.includes('/panel-control/officers')) {
 
         window.officerData = data;
 
-        data.forEach((item, i) => {
+        data.forEach((item, index) => {
             const row = document.createElement("tr");
             row.innerHTML = `
-                <th scope="row">${i + 1}</th>
+                <th scope="row">${index + 1}</th>
                 <td>${item.name}</td>
                 <td>${item.badge_number}</td>
                 <td>${item.rank}</td>
                 <td>${item.assigned_area}</td>
                 <td>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editOfficerModal" onclick="showEditOfficerModal(${item.id}, ${i})">Edit</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editOfficerModal" onclick="showEditOfficerModal(${item.id}, ${index})">Edit</button>
                     <button class="btn btn-danger" onclick="confirmDeleteOfficer(${item.id})">Delete</button>
                 </td>
             `;
